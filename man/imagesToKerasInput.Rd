@@ -4,16 +4,27 @@
 \alias{imagesToKerasInput}
 \title{Convert magick images in tibble to array for keras}
 \usage{
-imagesToKerasInput(images, type = NULL, grayscale = NULL, n_class = 1)
+imagesToKerasInput(
+  images,
+  subset = NULL,
+  type = NULL,
+  grayscale = NULL,
+  n_class = 1,
+  max = 1
+)
 }
 \arguments{
-\item{images}{tibble containing magick images (e.g. output of \code{loadImages})}
+\item{images}{list. Output of \code{loadImages} or \code{dataAugmentation}. List with two items ($info: data frame with information about images, $img: tibble containing magick images)}
+
+\item{subset}{integer. Indices of images to process. Can be useful for only processing subsets of images (e.g. training images, not test/validation images).}
 
 \item{type}{character. Can be "image" or "mask" and will set color channels of array accordingly (optional).}
 
 \item{grayscale}{logical. Defines color channels of images: 1 if code{TRUE}, 3 if \code{FALSE}.}
 
-\item{n_class}{For mask images, how many classes do they contain? (note that binary classifications like the canopy model have 1 class only - sky)}
+\item{n_class}{For mask images, how many classes do they contain? (note that binary classifications like the canopy model have one class only)}
+
+\item{max}{integer. Maximum value of output color values range. Can be 1 or 255.}
 }
 \value{
 An array with the following dimensions: image, height, width, channels
@@ -25,6 +36,8 @@ This function converts a tibble of images into input for TensorFlow models in ke
 The function will try to infer the colorspace from images, but if the colorspaces are inconsistent one has to define 'colorspace'.
 \code{type = "image"} can have either colorspace "sRGB" or "Gray", masks are always "Gray". color images have three color channels in the arrays, grayscale images have one color channel.
 \code{n_class} is only relevant for masks. It determines the dimensions of the output. The default 1 is the (binary case). Higher values are for multi-class cases. If n_class is 2 or larger, keras::to_categorical() will be applied, and the \code{\link{u_net}} model will use softmax instead of sigmoid activation in the final layer.
+
+By default, color value range will be 0-1. Alternatively, set \code{max} to 255 to create color value range 0-255 (e.g. to create input for Habitat-Net models).
 }
 \examples{
 # Example 1: Canopy

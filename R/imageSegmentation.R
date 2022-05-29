@@ -29,12 +29,12 @@
 #'
 #' The canopy density models predicts sky and the understory vegetation density model predicts the red flysheet The percentage of these is equivalent to openness (canopy openness or understory openness). This value is in the column "predicted".
 #'
-#' #' The interpretation of openness depends on context:
+#'  The interpretation of openness depends on context:
 #'
-#' * Canopy Cover images: openness = Gap Fraction and Fraction Soil
-#'
-#' * Hemispherical canopy images: openness = Canopy openness and site openness (in flat terrain)
-#'
+#' \itemize{
+#' \item Canopy Cover images: openness = Gap Fraction and Fraction Soil
+#' \item Hemispherical canopy images: openness = Canopy openness and site openness (in flat terrain)
+#' }
 #' See e.g. Gonsamo et al. (2013) for more details.
 #'
 #' Generally speaking, "predicted" is the percentage of the image that is 1 in the binary prediction.
@@ -50,22 +50,25 @@
 #'
 #' @return A list. The type and number of list items depends on the classification. For binary classifications (1 prediction class), the following list items are returned:
 #'
-#' * image (input images)
-#' * prediction (model prediction)
-#' * prediction_binary (binary prediction, only 0 or 1)
-#' * examples (images with their image segmentation results)
-#' * summary (data frame with fraction of image predicted)
-#' * mask (an image showing the area for which summary statistics were calculated (in white, only if \code{subsetArea} is defined)
-#'
+#' \itemize{
+#' \item image (input images)
+#' \item prediction (model prediction)
+#' \item prediction_binary (binary prediction, only 0 or 1)
+#' \item examples (images with their image segmentation results)
+#' \item summary (data frame with fraction of image predicted)
+#' \item mask (an image showing the area for which summary statistics were calculated (in white, only if \code{subsetArea} is defined)
+#' }
+#' 
 #' in multi-class models:
 #'
-#' * image (input images)
-#' * prediction_most_likely (the class with the highest probability, coded in grayscale)
-#' * class1 - classX: for each class, the predicted probabilities
-#' * examples (images with their image segmentation results)
-#' * summary (data frame with fraction of image covered by vegetation (black)).
-#' * mask (an image showing the area for which summary statistics were calculated (in white, only if \code{subsetArea} is defined)
-#
+#' \itemize{
+#' \item image (input images)
+#' \item prediction_most_likely (the class with the highest probability, coded in grayscale)
+#' \item class1 - classX: for each class, the predicted probabilities
+#' \item examples (images with their image segmentation results)
+#' \item summary (data frame with fraction of image covered by vegetation (black)).
+#' \item mask (an image showing the area for which summary statistics were calculated (in white, only if \code{subsetArea} is defined)
+#' }
 #'
 #' @export
 #' @importFrom dplyr bind_rows
@@ -185,7 +188,13 @@ imageSegmentation <- function(model,
 
     if(dim(x)[4] >= 2)        margin_x <- c(1)       # if color image as input
     if(dim(x)[4] == 1)        margin_x <- c(1,4)     # if grayscale image as input
+    
+    # if input images are in color range 0-255, change that to 0-1 to avoid error in as.raster (which defaults to max=1)
+    # allows processing of images for HabitatNet model
+    max_x <- max(x)
+    if(max_x > 1 & max_x <= 255) x <- x / 255
 
+    
       images_from_prediction <- tibble(
         image = x %>% array_branch(margin_x),
         prediction = predictions[,,,1] %>% array_branch(1),
@@ -232,7 +241,6 @@ imageSegmentation <- function(model,
 
 
   # if it's a binary classification (1 class only), calculate percentage of predicted areas
-
   if(n_class == 1){
 
     # remove subsetArea from values to summarize
